@@ -1,0 +1,26 @@
+{
+  "name": "smart-healthcare-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Smart Healthcare Monitoring System",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "init-db": "node scripts/init-database.js",
+    "create-user": "node scripts/create-test-user.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.1.0",
+    "firebase-admin": "^11.10.1",
+    "helmet": "^7.2.0",
+    "morgan": "^1.10.0",
+    "nodemailer": "^7.0.9",
+    "winston": "^3.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

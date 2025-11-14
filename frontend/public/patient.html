@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - SmartHealth</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SmartHealth</h2>
+            </div>
+            <nav>
+                <a href="#overview" class="active">
+                    <span>📊</span> Overview
+                </a>
+                <a href="#vitals">
+                    <span>💓</span> Vital Signs
+                </a>
+                <a href="#history">
+                    <span>📈</span> History
+                </a>
+                <a href="#" id="logoutBtn">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content patient-view">
+            <header class="dashboard-header">
+                <div>
+                    <h1>My Health Dashboard</h1>
+                    <p class="subtitle">Real-time monitoring of your vital signs</p>
+                </div>
+                <div class="header-actions">
+                    <div class="last-updated">
+                        Last updated: <span id="lastUpdate">--</span>
+                    </div>
+                    <div class="patient-info" id="patientInfo"></div>
+                </div>
+            </header>
+
+            <div class="vitals-grid">
+                <div class="vital-card heart-rate">
+                    <div class="vital-icon">❤️</div>
+                    <div class="vital-info">
+                        <h3>Heart Rate</h3>
+                        <p class="vital-value" id="heartRate">-- bpm</p>
+                        <span class="vital-status" id="hrStatus">Normal</span>
+                    </div>
+                </div>
+
+                <div class="vital-card oxygen">
+                    <div class="vital-icon">🫁</div>
+                    <div class="vital-info">
+                        <h3>Blood Oxygen (SpO2)</h3>
+                        <p class="vital-value" id="spo2">-- %</p>
+                        <span class="vital-status" id="spo2Status">Normal</span>
+                    </div>
+                </div>
+
+                <div class="vital-card temperature">
+                    <div class="vital-icon">🌡️</div>
+                    <div class="vital-info">
+                        <h3>Temperature</h3>
+                        <p class="vital-value" id="temperature">-- °C</p>
+                        <span class="vital-status" id="tempStatus">Normal</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Heart Rate Trend (24 Hours)</h3>
+                    </div>
+                    <canvas id="heartRateChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Oxygen Saturation (24 Hours)</h3>
+                    </div>
+                    <canvas id="spo2Chart"></canvas>
+                </div>
+            </div>
+
+            <div class="alerts-section">
+                <h3>Recent Alerts</h3>
+                <div id="recentAlerts" class="alerts-list"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/patient.js"></script>
+</body>
+</html>

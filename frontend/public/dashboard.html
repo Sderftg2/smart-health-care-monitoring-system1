@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard - SmartHealth</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .dashboard-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 0 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar nav a:hover,
+        .sidebar nav a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: white;
+        }
+
+        .sidebar nav a span {
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2rem;
+            color: #333;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-add-patient {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-add-patient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-info {
+            background: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            color: #333;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0.5rem 0;
+        }
+
+        .stat-card.alert {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+            color: white;
+        }
+
+        .stat-card.alert h3,
+        .stat-card.alert .stat-number {
+            color: white;
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+        }
+
+        .stat-card.success h3,
+        .stat-card.success .stat-number {
+            color: white;
+        }
+
+        .patients-section {
+            margin-bottom: 2rem;
+        }
+
+        .patients-section h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .patients-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .patient-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .patient-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .patient-info h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .patient-details {
+            display: flex;
+            gap: 1rem;
+            margin: 0.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .detail-badge {
+            background: #f8f9fa;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .vitals {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .vital {
+            background: #e8f4f8;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #0066cc;
+            font-weight: 600;
+        }
+
+        .vital.critical {
+            background: #ffe0e0;
+            color: #cc0000;
+        }
+
+        .vital.warning {
+            background: #fff4e0;
+            color: #cc6600;
+        }
+
+        .patient-actions button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .patient-actions button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .chart-container h3 {
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #667eea;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                padding: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🏥 SmartHealth</h2>
+                <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">Monitoring System</p>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="active">
+                    <span>👥</span> Patients
+                </a>
+                <a href="add-patient.html">
+                    <span>➕</span> Add Patient
+                </a>
+                <a href="alerts.html">
+                    <span>🚨</span> Alerts
+                </a>
+                <a href="device-simulator.html">
+                    <span>📱</span> Simulator
+                </a>
+                <a href="bluetooth-device.html">
+                    <span>⌚</span> Bluetooth
+                </a>
+                <a href="contact.html">
+                    <span>📞</span> Contact
+                </a>
+                <a href="#" id="logoutBtn">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div>
+                    <h1>Patient Monitoring Dashboard</h1>
+                    <p style="color: #666; margin-top: 0.5rem;">Real-time health monitoring system</p>
+                </div>
+                <div class="header-actions">
+                    <a href="add-patient.html" class="btn-add-patient">
+                        <span>➕</span> Add New Patient
+                    </a>
+                    <div class="user-info" id="userInfo">Loading...</div>
+                </div>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Patients</h3>
+                    <div class="stat-number" id="totalPatients">
+                        <div class="spinner"></div>
+                    </div>
+                    <p style="color: #999; font-size: 0.85rem;">Registered in system</p>
+                </div>
+                
+                <div class="stat-card alert">
+                    <h3>Active Alerts</h3>
+                    <div class="stat-number" id="activeAlerts">
+                        <div class="spinner" style="border-color: rgba(255,255,255,0.3); border-top-color: white;"></div>
+                    </div>
+                    <p style="opacity: 0.9; font-size: 0.85rem;">Require attention</p>
+                </div>
+                
+                <div class="stat-card success">
+                    <h3>Stable Patients</h3>
+                    <div class="stat-number" id="stablePatients">
+                        <div class="spinner" style="border-color: rgba(255,255,255,0.3); border-top-color: white;"></div>
+                    </div>
+                    <p style="opacity: 0.9; font-size: 0.85rem;">Normal vitals</p>
+                </div>
+            </div>
+
+            <div class="patients-section">
+                <h2>Patients List</h2>
+                <div id="patientsList" class="patients-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 1rem;">Loading patients...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-container">
+                    <h3>Heart Rate Trends</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="heartRateChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>SpO2 Levels</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="spo2Chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpF-98RgTGPOHy69Sm5sr6lt4WpPaGC40",
+            authDomain: "smart-health-care-monito-d8ab0.firebaseapp.com",
+            databaseURL: "https://smart-health-care-monito-d8ab0-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "smart-health-care-monito-d8ab0",
+            storageBucket: "smart-health-care-monito-d8ab0.firebasestorage.app",
+            messagingSenderId: "592595862489",
+            appId: "1:592595862489:web:0e1076762a5b9379760fc8"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        let heartRateChart, spo2Chart;
+
+        // Authentication check
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const userDoc = await database.ref(`users/${user.uid}`).once('value');
+            const userData = userDoc.val();
+            
+            if (userData) {
+                document.getElementById('userInfo').textContent = `Dr. ${userData.name}`;
+            }
+
+            loadPatients();
+            loadStats();
+            initializeCharts();
+            setupLogout();
+        });
+
+        // Load patients
+        async function loadPatients() {
+            const patientsRef = database.ref('patients');
+            
+            patientsRef.on('value', (snapshot) => {
+                const patients = snapshot.val();
+                const patientsList = document.getElementById('patientsList');
+                patientsList.innerHTML = '';
+                
+                if (!patients) {
+                    patientsList.innerHTML = `
+                        <div class="no-data">
+                            <p>No patients found</p>
+                            <a href="add-patient.html" style="color: #667eea; text-decoration: none; font-weight: 600;">
+                                ➕ Add your first patient
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                Object.entries(patients).forEach(([id, patient]) => {
+                    const patientCard = document.createElement('div');
+                    patientCard.className = 'patient-card';
+                    
+                    const hr = patient.latestData?.heartRate || 0;
+                    const spo2 = patient.latestData?.spo2 || 0;
+                    const temp = patient.latestData?.temperature || 0;
+                    
+                    const hrClass = hr > 100 || hr < 60 ? 'critical' : hr > 90 ? 'warning' : '';
+                    const spo2Class = spo2 < 90 ? 'critical' : spo2 < 95 ? 'warning' : '';
+                    const tempClass = temp > 37.5 || temp < 36 ? 'warning' : '';
+                    
+                    patientCard.innerHTML = `
+                        <div class="patient-info">
+                            <h4>👤 ${patient.name || 'Unknown Patient'}</h4>
+                            <div class="patient-details">
+                                <span class="detail-badge">📅 Age: ${patient.age || 'N/A'}</span>
+                                <span class="detail-badge">⚧ ${patient.gender || 'N/A'}</span>
+                                <span class="detail-badge">🩸 ${patient.bloodGroup || 'N/A'}</span>
+                                <span class="detail-badge">📱 ${patient.contact || 'N/A'}</span>
+                            </div>
+                            <div class="vitals">
+                                <span class="vital ${hrClass}">❤️ HR: ${hr || 'N/A'} bpm</span>
+                                <span class="vital ${spo2Class}">🫁 SpO2: ${spo2 || 'N/A'}%</span>
+                                <span class="vital ${tempClass}">🌡️ Temp: ${temp || 'N/A'}°C</span>
+                            </div>
+                            ${patient.latestData?.timestamp ? 
+                                `<p style="font-size: 0.8rem; color: #999; margin-top: 0.5rem;">
+                                    Last updated: ${new Date(patient.latestData.timestamp).toLocaleString()}
+                                </p>` : ''
+                            }
+                        </div>
+                        <div class="patient-actions">
+                            <button onclick="viewPatientDetails('${id}')">View Details</button>
+                        </div>
+                    `;
+                    patientsList.appendChild(patientCard);
+                });
+
+                updateChartsWithData(patients);
+            });
+        }
+
+        // Load statistics
+        async function loadStats() {
+            const patientsSnapshot = await database.ref('patients').once('value');
+            const alertsSnapshot = await database.ref('alerts').once('value');
+            
+            const patients = patientsSnapshot.val();
+            const alerts = alertsSnapshot.val();
+            
+            const totalPatients = patients ? Object.keys(patients).length : 0;
+            const activeAlerts = alerts ? Object.values(alerts).filter(a => a.status === 'active').length : 0;
+            
+            let stableCount = 0;
+            if (patients) {
+                Object.values(patients).forEach(patient => {
+                    const hr = patient.latestData?.heartRate || 0;
+                    const spo2 = patient.latestData?.spo2 || 0;
+                    if (hr >= 60 && hr <= 100 && spo2 >= 95) {
+                        stableCount++;
+                    }
+                });
+            }
+            
+            document.getElementById('totalPatients').textContent = totalPatients;
+            document.getElementById('activeAlerts').textContent = activeAlerts;
+            document.getElementById('stablePatients').textContent = stableCount;
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            const ctxHR = document.getElementById('heartRateChart').getContext('2d');
+            heartRateChart = new Chart(ctxHR, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Heart Rate (bpm)',
+                        data: [],
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 50,
+                            max: 120
+                        }
+                    }
+                }
+            });
+
+            const ctxSpO2 = document.getElementById('spo2Chart').getContext('2d');
+            spo2Chart = new Chart(ctxSpO2, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'SpO2 (%)',
+                        data: [],
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 85,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update charts with patient data
+        function updateChartsWithData(patients) {
+            const hrData = [];
+            const spo2Data = [];
+            const labels = [];
+
+            Object.entries(patients).forEach(([id, patient]) => {
+                if (patient.latestData) {
+                    labels.push(patient.name.split(' ')[0]);
+                    hrData.push(patient.latestData.heartRate || 0);
+                    spo2Data.push(patient.latestData.spo2 || 0);
+                }
+            });
+
+            heartRateChart.data.labels = labels;
+            heartRateChart.data.datasets[0].data = hrData;
+            heartRateChart.update();
+
+            spo2Chart.data.labels = labels;
+            spo2Chart.data.datasets[0].data = spo2Data;
+            spo2Chart.update();
+        }
+
+        // Setup logout
+        function setupLogout() {
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                auth.signOut().then(() => {
+                    window.location.href = 'login.html';
+                });
+            });
+        }
+
+        // View patient details
+        function viewPatientDetails(patientId) {
+            window.location.href = `patient-details.html?id=${patientId}`;
+        }
+
+        console.log('✅ Dashboard loaded successfully');
+    </script>
+</body>
+</html>

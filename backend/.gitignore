@@ -1,0 +1,13 @@
+node_modules/
+package-lock.json
+.env
+.env.local
+.env.production
+firebase-admin-key.json
+serviceAccountKey.json
+*.log
+logs/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

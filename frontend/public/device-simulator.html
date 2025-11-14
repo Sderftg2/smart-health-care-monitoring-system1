@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Device Simulator - SmartHealth</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 2rem;
+        }
+        .simulator-container { max-width: 900px; margin: 0 auto; }
+        .device-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        h2 { color: #333; margin-bottom: 1rem; }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            margin-right: 0.5rem;
+        }
+        .status-indicator.active {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .control-group {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .control-group input[type="range"] {
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+        .value-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 5px;
+            border: 2px solid #e0e0e0;
+            font-size: 1rem;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0.5rem 0;
+            transition: transform 0.3s;
+        }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary {
+            width: 100%;
+            padding: 1rem;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0.5rem 0;
+        }
+        .log-container {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 1rem;
+            border-radius: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .user-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="simulator-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+            <div class="user-badge" id="userBadge">Loading...</div>
+        </div>
+        
+        <div class="device-card">
+            <h2>
+                <span class="status-indicator" id="statusIndicator"></span>
+                Virtual IoT Device Simulator
+            </h2>
+            <p>Simulate real-time patient vital signs data transmission</p>
+            
+            <div style="margin: 1.5rem 0;">
+                <label>Device ID:</label>
+                <input type="text" id="deviceId" value="SIM_DEVICE_001">
+            </div>
+            
+            <div style="margin: 1.5rem 0;">
+                <label>Patient ID:</label>
+                <input type="text" id="patientId" value="PATIENT_001">
+            </div>
+
+            <h3>Manual Controls</h3>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Heart Rate (bpm)</label>
+                    <input type="range" id="heartRate" min="40" max="180" value="75">
+                    <div class="value-display" id="hrValue">75</div>
+                </div>
+                
+                <div class="control-group">
+                    <label>SpO2 (%)</label>
+                    <input type="range" id="spo2" min="70" max="100" value="98">
+                    <div class="value-display" id="spo2Value">98</div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Temperature (°C)</label>
+                    <input type="range" id="temperature" min="35" max="42" step="0.1" value="36.8">
+                    <div class="value-display" id="tempValue">36.8</div>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="startBtn">▶️ Start Transmission</button>
+            <button class="btn-secondary" id="stopBtn" disabled>⏸️ Stop</button>
+        </div>
+
+        <div class="device-card">
+            <h3>Transmission Log</h3>
+            <div class="log-container" id="logContainer">
+                <div>Waiting to start transmission...</div>
+            </div>
+            <button class="btn-secondary" onclick="clearLog()" style="margin-top: 1rem; width: auto; padding: 0.5rem 1rem;">
+                Clear Log
+            </button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpF-98RgTGPOHy69Sm5sr6lt4WpPaGC40",
+            authDomain: "smart-health-care-monito-d8ab0.firebaseapp.com",
+            databaseURL: "https://smart-health-care-monito-d8ab0-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "smart-health-care-monito-d8ab0",
+            storageBucket: "smart-health-care-monito-d8ab0.firebasestorage.app",
+            messagingSenderId: "592595862489",
+            appId: "1:592595862489:web:0e1076762a5b9379760fc8"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // 🔒 AUTHENTICATION REQUIRED
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                alert('🔒 Please login to access Device Simulator');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Get user info
+            const userDoc = await database.ref(`users/${user.uid}`).once('value');
+            const userData = userDoc.val();
+            
+            if (userData) {
+                document.getElementById('userBadge').textContent = `👤 ${userData.name}`;
+            } else {
+                document.getElementById('userBadge').textContent = `👤 ${user.email}`;
+            }
+
+            console.log('✅ Authenticated:', user.email);
+        });
+
+        let isRunning = false;
+        let intervalId = null;
+        let dataCount = 0;
+
+        const heartRateSlider = document.getElementById('heartRate');
+        const spo2Slider = document.getElementById('spo2');
+        const tempSlider = document.getElementById('temperature');
+        const hrValue = document.getElementById('hrValue');
+        const spo2Value = document.getElementById('spo2Value');
+        const tempValue = document.getElementById('tempValue');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const logContainer = document.getElementById('logContainer');
+
+        heartRateSlider.addEventListener('input', (e) => {
+            hrValue.textContent = e.target.value;
+        });
+
+        spo2Slider.addEventListener('input', (e) => {
+            spo2Value.textContent = e.target.value;
+        });
+
+        tempSlider.addEventListener('input', (e) => {
+            tempValue.textContent = e.target.value;
+        });
+
+        startBtn.addEventListener('click', () => {
+            isRunning = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            statusIndicator.classList.add('active');
+            
+            addLog('✅ Transmission started');
+            sendData();
+            intervalId = setInterval(sendData, 5000);
+        });
+
+        stopBtn.addEventListener('click', () => {
+            isRunning = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            statusIndicator.classList.remove('active');
+            
+            clearInterval(intervalId);
+            addLog('⏸️ Transmission stopped');
+        });
+
+        async function sendData() {
+            const patientId = document.getElementById('patientId').value;
+            const deviceId = document.getElementById('deviceId').value;
+            
+            const dataPoint = {
+                deviceId: deviceId,
+                patientId: patientId,
+                heartRate: parseFloat(heartRateSlider.value),
+                spo2: parseFloat(spo2Slider.value),
+                temperature: parseFloat(tempSlider.value),
+                timestamp: Date.now()
+            };
+            
+            try {
+                await database.ref(`deviceData/${deviceId}`).push(dataPoint);
+                await database.ref(`patients/${patientId}/latestData`).set(dataPoint);
+                
+                dataCount++;
+                addLog(`📤 Data #${dataCount}: HR=${dataPoint.heartRate} SpO2=${dataPoint.spo2}% Temp=${dataPoint.temperature}°C`);
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+            }
+        }
+
+        function addLog(message) {
+            const time = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${time}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLog() {
+            logContainer.innerHTML = '<div>Log cleared...</div>';
+            dataCount = 0;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            statusIndicator.classList.remove('active');
+        });
+    </script>
+</body>
+</html>
